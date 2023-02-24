@@ -177,6 +177,14 @@ func (e *Env) LoadString(s string) {
 	e.loadLines(strings.Split(s, "\n"))
 }
 
+//	// Capture variables in the form of:
+//	// $VAR
+//	// $var[1]
+//	// $PARAM[1:3]
+//	// $VAR[1:]
+//	// $DATA[:3]
+//	var varRegex = regexp.MustCompile(`\$\w+(\[\d+\]|\[\d+:\d+\]|\[\d+:\]|\[:\d+\]|)`)
+
 func (e *Env) loadLines(lines []string) {
 	for _, line := range lines {
 		line = stripComments(line)
@@ -212,7 +220,9 @@ func (e *Env) loadLines(lines []string) {
 			if newv := strings.ToLower(v); newv == "null" || newv == "nil" || newv == "none" {
 				v = ""
 			}
-
+			if strings.HasPrefix(v, "$") {
+				v = e.Get(v[1:])
+			}
 			val[i] = v
 		}
 		if len(val) == 1 && val[0] == "" {
