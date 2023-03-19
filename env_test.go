@@ -22,7 +22,8 @@ type InnerConfig struct {
 }
 
 func TestLoad(t *testing.T) {
-	dotenv.LoadString(`
+	var env = (&dotenv.Env{Variables: map[string][]string{}})
+	env.LoadString(`
 		TESTCONFIG.Host = "localhost"
 		TESTCONFIG.Port = 8080
 		TESTCONFIG.TEST = "test"
@@ -33,7 +34,7 @@ func TestLoad(t *testing.T) {
 	`)
 	var config TestConfig
 	var inner InnerConfig
-	dotenv.Unmarshal(&config, &inner)
+	env.Unmarshal(&config, &inner)
 	if config.Host != "localhost" {
 		t.Error("Host should be localhost")
 	}

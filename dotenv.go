@@ -8,79 +8,46 @@ import (
 	"time"
 )
 
+type Environment interface {
+	GetAll(key string, def ...string) []string
+	Get(key string, def ...string) string
+	GetBool(key string, def ...bool) bool
+	GetInt(key string, def ...int) int
+	GetTimeDuration(key string, def ...time.Duration) time.Duration
+}
+
 type Env struct {
 	Variables map[string][]string
 	loaded    bool
 }
 
-func (e *Env) GetAll(key string) []string {
-	if !e.loaded {
-		panic("env not loaded")
+func NewEnv(path string) Environment {
+	var env = &Env{
+		Variables: make(map[string][]string),
 	}
-	return e.Variables[key]
+	env.Load(path)
+	return env
 }
 
-func (e *Env) Get(key string) string {
-	if !e.loaded {
-		panic("env not loaded")
-	}
-	return e.Variables[key][0]
-}
-
-func (e *Env) GetDefault(key, def string) string {
+func (e *Env) GetAll(key string, def ...string) []string {
 	if !e.loaded {
 		panic("env not loaded")
 	}
 	if val, ok := e.Variables[key]; ok {
-		return val[0]
-	}
-	return def
-}
-
-func (e *Env) GetBool(key string) bool {
-	if !e.loaded {
-		panic("env not loaded")
-	}
-	var b, err = strconv.ParseBool(e.Variables[key][0])
-	if err != nil {
-		panic(err)
-	}
-	return b
-}
-
-func (e *Env) GetInt(key string) int {
-	if !e.loaded {
-		panic("env not loaded")
-	}
-	var i, err = strconv.Atoi(e.Variables[key][0])
-	if err != nil {
-		panic(err)
-	}
-	return i
-}
-
-var env Env = Env{
-	Variables: make(map[string][]string),
-}
-
-func GetAll(key string, def ...string) []string {
-	if !env.loaded {
-		env.Load(".env")
-	}
-	if val, ok := env.Variables[key]; ok {
 		return val
 	}
 	if len(def) > 0 {
 		return def
 	}
 	return nil
+
 }
 
-func Get(key string, def ...string) string {
-	if !env.loaded {
-		env.Load(".env")
+func (e *Env) Get(k string, def ...string) string {
+	if !e.loaded {
+		panic("env not loaded")
 	}
-	if val, ok := env.Variables[key]; ok {
+	if val, ok := e.Variables[k]; ok {
 		return val[0]
 	}
 	if len(def) > 0 {
@@ -89,11 +56,11 @@ func Get(key string, def ...string) string {
 	return ""
 }
 
-func GetBool(key string, def ...bool) bool {
-	if !env.loaded {
-		env.Load(".env")
+func (e *Env) GetBool(key string, def ...bool) bool {
+	if !e.loaded {
+		panic("env not loaded")
 	}
-	if val, ok := env.Variables[key]; ok {
+	if val, ok := e.Variables[key]; ok {
 		var b, err = strconv.ParseBool(val[0])
 		if err != nil {
 			panic(err)
@@ -104,13 +71,14 @@ func GetBool(key string, def ...bool) bool {
 		return def[0]
 	}
 	return false
+
 }
 
-func GetInt(key string, def ...int) int {
-	if !env.loaded {
-		env.Load(".env")
+func (e *Env) GetInt(key string, def ...int) int {
+	if !e.loaded {
+		panic("env not loaded")
 	}
-	if val, ok := env.Variables[key]; ok {
+	if val, ok := e.Variables[key]; ok {
 		var i, err = strconv.Atoi(val[0])
 		if err != nil {
 			panic(err)
@@ -121,13 +89,13 @@ func GetInt(key string, def ...int) int {
 		return def[0]
 	}
 	return 0
-}
 
-func GetTimeDuration(key string, def ...time.Duration) time.Duration {
-	if !env.loaded {
-		env.Load(".env")
+}
+func (e *Env) GetTimeDuration(key string, def ...time.Duration) time.Duration {
+	if !e.loaded {
+		panic("env not loaded")
 	}
-	if val, ok := env.Variables[key]; ok {
+	if val, ok := e.Variables[key]; ok {
 		var d, err = ParseDuration(val[0])
 		if err != nil {
 			goto retDef
@@ -139,18 +107,6 @@ retDef:
 		return def[0]
 	}
 	return 0
-}
-
-func Load(path string) {
-	env.Load(path)
-}
-
-func LoadString(s string) {
-	env.LoadString(s)
-}
-
-func Unmarshal(s ...interface{}) {
-	env.Unmarshal(s...)
 }
 
 func (e *Env) Unmarshal(s ...interface{}) error {
